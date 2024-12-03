@@ -1,0 +1,77 @@
+2024-11-28 23:35:35,143 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:36,929 - __main__ - INFO - 3D视图初始化完成
+2024-11-28 23:35:36,930 - __main__ - INFO - 数据监控页面初始化完成
+2024-11-28 23:35:36,932 - __main__ - INFO - COM设置页面初始化完成
+2024-11-28 23:35:36,933 - __main__ - INFO - 模型配置页面初始化完成
+2024-11-28 23:35:36,933 - __main__ - INFO - 应用程序初始化完成
+2024-11-28 23:35:36,988 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:39,039 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:41,106 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:43,167 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:45,227 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:47,289 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:49,344 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
+2024-11-28 23:35:51,396 - __main__ - ERROR - 创建手部模型时发生错误: module 'pyvista' has no attribute 'transform'
+Traceback (most recent call last):
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/main.py", line 137, in create_hand_model
+    rotation_matrix[:3, :3] = pv.transform.rotate_vectors(
+                              ^^^^^^^^^^^^
+  File "/Users/mac/CascadeProjects/data_glove_visualizer/.venv/lib/python3.12/site-packages/pyvista/__init__.py", line 113, in __getattr__
+    raise AttributeError(f"module 'pyvista' has no attribute '{name}'") from None
+AttributeError: module 'pyvista' has no attribute 'transform'
