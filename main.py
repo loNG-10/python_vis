@@ -35,6 +35,7 @@ class DataGloveVisualizer:
         self.data_queue = queue.Queue()
         self.serial_thread = None
         self.thread_running = False
+        self.visualization_running = False
         
         # 初始化串口
         self.angle_serial = None
@@ -110,7 +111,14 @@ class DataGloveVisualizer:
             angles = self.angle_data
         if pressures is None:
             pressures = self.pressure_data
-            
+        
+        # 确保压力数据有效
+        if not isinstance(pressures, list) or len(pressures) != 5:
+            pressures = [0] * 5
+        
+        # 确保压力值在0-1024范围内
+        pressures = [min(max(p, 0), 1024) for p in pressures]
+        
         # 清除当前图形
         self.ax.cla()
         
@@ -149,8 +157,10 @@ class DataGloveVisualizer:
             finger_angles = angles[finger_key]
             finger_color = self.finger_colors[finger_key]
             
-            # 获取压力值并计算颜色
-            pressure = min(max(pressures[i+1] / 1024.0, 0), 1)  # 归一化压力值
+            # 获取压力值并确保正确归一化
+            pressure = pressures[i+1] / 1024.0  # 确保使用正确的索引
+            pressure = min(max(pressure, 0), 1)  # 确保在0-1范围内
+            
             base_color = np.array(matplotlib.colors.to_rgb(finger_color))
             highlight_color = np.array([1, 0, 0])  # 红色
             color = tuple(base_color * (1-pressure) + highlight_color * pressure)
@@ -335,36 +345,68 @@ class DataGloveVisualizer:
 
     def update_hand_model(self, angles=None, pressures=None):
         """更新手部模型"""
-        logging.debug(f"update_hand_model called with angles={angles}, pressures={pressures}")
-        logging.debug(f"current self.angle_data={self.angle_data}")
-        logging.debug(f"current self.pressure_data={self.pressure_data}")
+        # logging.debug(f"update_hand_model called with angles={angles}, pressures={pressures}")
+        # logging.debug(f"current self.angle_data={self.angle_data}")
+        # logging.debug(f"current self.pressure_data={self.pressure_data}")
+        if angles is None:
+            angles = self.angle_data
+        if pressures is None:
+            pressures = self.pressure_data
         
         # 保存当前视角
         current_elev = self.ax.elev
         current_azim = self.ax.azim
         
-        # 清除当前图形内容，但保留坐标轴
-        self.ax.clear()
+        # # 清除当前图形内容，但保留坐标轴
+        # self.ax.clear()
         
-        # 重新设置视图属性
-        self.update_view_limits()
-        self.ax.grid(False)
-        self.ax.xaxis.pane.fill = False
-        self.ax.yaxis.pane.fill = False
-        self.ax.zaxis.pane.fill = False
-        self.ax.set_xlabel('X轴')
-        self.ax.set_ylabel('Y轴')
-        self.ax.set_zlabel('Z轴')
-        self.ax.set_title('手部模型可视化')
+        # # 重新设置视图属性
+        # self.update_view_limits()
+        # self.ax.grid(False)
+        # self.ax.xaxis.pane.fill = False
+        # self.ax.yaxis.pane.fill = False
+        # self.ax.zaxis.pane.fill = False
+        # self.ax.set_xlabel('X轴')
+        # self.ax.set_ylabel('Y轴')
+        # self.ax.set_zlabel('Z轴')
+        # self.ax.set_title('手部模型可视化')
+
+        # 更新模型
+        self.create_hand_model(angles, pressures)
         
         # 恢复之前的视角
         self.ax.view_init(elev=current_elev, azim=current_azim)
         
         # 创建新的手部模型
+        # self.update_hand_model_parts(angles, pressures)
         self.create_hand_model(angles, pressures)
         
         # 更新画布
         self.canvas.draw()
+
+    def update_hand_model_parts(self, angles, pressures):
+        """更新手部模型的各个部分"""
+        # 假设你已经在 create_hand_model 中创建了手部模型的各个部分
+        # 这里我们只更新手指和手掌的绘制数据
+
+        # 更新手掌
+        self.palm.set_data(self.palm_points[:, 0], self.palm_points[:, 1])  # 更新手掌的X和Y数据
+        self.palm.set_3d_properties(self.palm_points[:, 2])  # 更新手掌的Z数据
+
+        # 更新手指
+        for i, finger_key in enumerate(self.finger_colors.keys()):
+            finger_angles = angles[finger_key]
+            finger_color = self.finger_colors[finger_key]
+
+            # 更新手指的绘制数据
+            # 这里假设你有一个手指的线条对象 self.fingers[i]
+            self.fingers[i].set_data(self.finger_points[i][:, 0], self.finger_points[i][:, 1])
+            self.fingers[i].set_3d_properties(self.finger_points[i][:, 2])
+
+            # 更新手指的颜色
+            pressure = pressures[i + 1] / 1024.0  # 确保使用正确的索引
+            color = self.calculate_finger_color(finger_color, pressure)
+            self.fingers[i].set_color(color)
 
     def serial_read_thread(self):
         """串口数据读取线程"""
@@ -376,15 +418,15 @@ class DataGloveVisualizer:
                 if self.angle_serial and self.angle_serial.is_open:
                     if self.angle_serial.in_waiting:
                         timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-                        print(f"\n[{timestamp}] ===== 角度传感器数据 =====")
+                        # print(f"\n[{timestamp}] ===== 角度传感器数据 =====")
                         data = self.angle_serial.readline().decode('utf-8').strip()
-                        print(f"► 原始字节: {data}")
+                        # print(f"► 原始字节: {data}")
                         try:
                             decoded = data.strip()
-                            print(f"► 解码数据: {decoded}")
+                            # print(f"► 解码数据: {decoded}")
                             if decoded:
                                 success = self.parse_serial_data(decoded)
-                                print(f"► 数据解析{'成功' if success else '失败'}")
+                                # print(f"► 数据解析{'成功' if success else '失败'}")
                                 if success:
                                     self.data_queue.put(True)
                         except Exception as e:
@@ -394,34 +436,57 @@ class DataGloveVisualizer:
                 if self.pressure_serial and self.pressure_serial.is_open:
                     if self.pressure_serial.in_waiting:
                         timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-                        print(f"\n[{timestamp}] ===== 压力传感器数据 =====")
+                        # print(f"\n[{timestamp}] ===== 压力传感器数据 =====")
                         data = self.pressure_serial.readline().decode('utf-8').strip()
-                        print(f"► 原始字节: {data}")
-                        try:
-                            decoded = data.strip()
-                            print(f"► 解码数据: {decoded}")
-                            if decoded:
-                                buffer += decoded
-                                while '\n' in buffer:
-                                    line, buffer = buffer.split('\n', 1)
-                                    line = line.strip()
-                                    print(f"► 处理行: {line}")
-                                    if line.startswith('ch0:'):
-                                        values = re.findall(r'ch\d:(\d+)', line)
-                                        if len(values) == 5:
-                                            pressure_data = [int(v) for v in values]
-                                            print(f"[压力传感器] 解析出的数据: {pressure_data}")
-                                            self.data_queue.put(pressure_data)
-                        except Exception as e:
-                            print(f"[错误] 压力传感器数据解码失败: {e}")
-                            buffer = ""
-                            continue
+                        # 修改解析方式以匹配新格式
+                        if data.startswith('ch0:'):
+                            # print(f"原始数据: {data}")  # 调试输出
+                            try:
+                                # 直接用空格分割
+                                parts = data.split()
+                                print(f"分割后: {parts}")  # 调试输出
+                                
+                                values = []
+                                for part in parts:
+                                    # 只取":"后面的数值部分
+                                    value = int(part.split(':')[1])
+                                    values.append(value)
+                                
+                                if len(values) == 5:
+                                    # print(f"解析出的压力值: {values}")  # 调试输出
+                                    self.pressure_data = values.copy()
+                                    self.data_queue.put(('pressure', values))
+                                # else:
+                                    # print(f"压力数据长度不正确: {len(values)}")
+                            except Exception as e:
+                                print(f"压力数据解析错误: {e}")
                 
-                time.sleep(0.1)  # 短暂休眠，避免CPU占用过高
+                time.sleep(0.001)  # 短暂休眠，避免CPU占用过高
                     
             except Exception as e:
                 print(f"串口读取错误: {e}")
-                break
+                buffer = ""  # 出错时清空缓冲区
+                # 等待1秒后重试
+                print("等待1秒后重试连接...")
+                time.sleep(1)
+                
+                # 尝试重新打开串口
+                try:
+                    if self.angle_serial:
+                        if self.angle_serial.is_open:
+                            self.angle_serial.close()
+                        self.angle_serial.open()
+                        print("角度传感器串口重新连接成功")
+                        
+                    if self.pressure_serial:
+                        if self.pressure_serial.is_open:
+                            self.pressure_serial.close()
+                        self.pressure_serial.open()
+                        print("压力传感器串口重新连接成功")
+                        
+                except Exception as retry_error:
+                    print(f"重新连接失败: {retry_error}")
+                    break
         
         print("=== 串口读取线程结束 ===\n")
 
@@ -455,11 +520,15 @@ class DataGloveVisualizer:
                     return
                 
                 if angle_port:
-                    self.angle_serial = serial.Serial(angle_port, 115200, timeout=0.1)
+                    self.angle_serial = serial.Serial(port=angle_port,
+                                                      baudrate=115200,
+                                                      timeout=0.03)
                     logging.info(f"角度数据串口{angle_port}已连接")
                 
                 if pressure_port:
-                    self.pressure_serial = serial.Serial(pressure_port, 115200, timeout=0.1)
+                    self.pressure_serial = serial.Serial(port=pressure_port,
+                                                        baudrate=115200,
+                                                        timeout=0.03)
                     logging.info(f"压力数据串口{pressure_port}已连接")
                 
                 self.connect_btn.configure(text="断开")
@@ -472,32 +541,54 @@ class DataGloveVisualizer:
                 if self.pressure_serial and self.pressure_serial.is_open:
                     self.pressure_serial.close()
                 self.connect_btn.configure(text="连接")
+    
+    def start_serial_thread(self):
+        """启动串口数据读取线程"""
+        self.thread_running = True
+        self.serial_thread = threading.Thread(target=self.serial_read_thread)
+        self.serial_thread.daemon = True  # 设置为守护线程，这样主程序退出时线程会自动结束
+        self.serial_thread.start()
+        logging.info("串口数据读取线程已启动")
 
-    def update(self):
-        """更新函数"""
-        if not self.updating:
-            try:
-                self.updating = True
+    # def update(self):
+    #     """更新函数"""
+    #     if not self.updating:
+    #         try:
+    #             self.updating = True
                 
-                # 检查数据队列
-                while not self.data_queue.empty():
-                    try:
-                        # 取出数据但不使用，因为实际数据已经在parse_serial_data中更新
-                        self.data_queue.get_nowait()
-                    except queue.Empty:
-                        break
+    #             # 检查数据队列
+    #             while not self.data_queue.empty():
+    #                 try:
+    #                     # 取出数据但不使用，因为实际数据已经在parse_serial_data中更新
+    #                     self.data_queue.get_nowait()
+    #                 except queue.Empty:
+    #                     break
                 
-                # 更新显示
-                self.update_data_display()
-                self.update_hand_model()
+    #             # 更新显示
+    #             self.update_data_display()
+    #             self.update_hand_model()
                 
-            except Exception as e:
-                logging.error(f"更新时发生错误: {e}")
-            finally:
-                self.updating = False
+    #         except Exception as e:
+    #             logging.error(f"更新时发生错误: {e}")
+    #         finally:
+    #             self.updating = False
                 
-        # 安排下一次更新
-        self.root.after(self.update_interval, self.update)
+    #     # 安排下一次更新
+    #     self.root.after(self.update_interval, self.update)
+
+    # def start_visualization_thread(self):
+    #     """启动可视化更新线程"""
+    #     self.visualization_thread_running = True
+    #     self.visualization_thread = threading.Thread(target=self.visualization_update_thread)
+    #     self.visualization_thread.daemon = True  # 设置为守护线程
+    #     self.visualization_thread.start()
+
+    # def visualization_update_thread(self):
+    #     """可视化更新线程"""
+    #     while self.visualization_thread_running:
+    #         self.update_visualization()  # 调用更新可视化的方法
+    #         time.sleep(self.update_interval / 1000.0)  # 根据更新间隔控制频率
+
 
     def update_data_display(self):
         """更新数据显示"""
@@ -568,7 +659,7 @@ class DataGloveVisualizer:
         angle_frame = ttk.LabelFrame(right_frame, text="角度数据")
         angle_frame.pack(fill=tk.BOTH, padx=5, pady=5, expand=True)
         
-        # 为每个手指创��角度显示
+        # 为每个手指创角度显示
         self.angle_labels = {}
         
         for i, name in enumerate(finger_names):
@@ -728,7 +819,7 @@ class DataGloveVisualizer:
     def map_angle(self, value, idx):
         """将原始角度映射到0-90度范围"""
         if not self.is_calibrated:
-            logging.debug(f"未校准，返回原始值: idx={idx}, value={value}")
+            # logging.debug(f"未校准，返回原始值: idx={idx}, value={value}")
             return value
         
         min_val = self.calibration_min[idx]
@@ -769,71 +860,76 @@ class DataGloveVisualizer:
             # 映射角度到0-90度范围
             mapped_angles = [self.map_angle(angle, i) for i, angle in enumerate(angles)]
             
-            # 将映射后的角度分配给手指关节
-            self.angle_data["finger_1"] = mapped_angles[0:3]   # 食指 (C1-C3)
-            self.angle_data["finger_2"] = mapped_angles[3:6]   # 中指 (C4-C6)
-            self.angle_data["finger_3"] = mapped_angles[6:9]   # 无名指 (C7-C9)
-            self.angle_data["finger_4"] = mapped_angles[9:12]  # 小指 (C10-C12)
-            self.angle_data["finger_0"] = mapped_angles[12:14] # 大拇指 (C13-C14)
+            # 将映射后的角度分配给指关节
+            self.angle_data["finger_1"] = [mapped_angles[3], mapped_angles[2], mapped_angles[5]]   # 食指 (C4,C3,C6)
+            self.angle_data["finger_2"] = [mapped_angles[6], mapped_angles[9], mapped_angles[4]]   # 中指 (C7,C10,C5)
+            self.angle_data["finger_3"] = [mapped_angles[13], mapped_angles[8], mapped_angles[7]]   # 无名指 (C14,C9,C8)
+            self.angle_data["finger_4"] = [mapped_angles[12], mapped_angles[11], mapped_angles[10]]   # 小指 (C13,C12,C11)
+            self.angle_data["finger_0"] = [mapped_angles[0], mapped_angles[0]]   # 大拇指 (C2,C1)
+            # self.angle_data["finger_1"] = mapped_angles[0:3]   # 食指 (C1-C3)
+            # self.angle_data["finger_2"] = mapped_angles[3:6]   # 中指 (C4-C6)
+            # self.angle_data["finger_3"] = mapped_angles[6:9]   # 无名指 (C7-C9)
+            # self.angle_data["finger_4"] = mapped_angles[9:12]  # 小指 (C10-C12)
+            # self.angle_data["finger_0"] = mapped_angles[12:14] # 大拇指 (C13-C14)
             
-            logging.info(f"原始角度数据: {angles}")
-            logging.info(f"映射后角度数据: {mapped_angles}")
-            logging.info(f"更新后的手指角度: {self.angle_data}")
+            # logging.info(f"原始角度数据: {angles}")
+            # logging.info(f"映射后角度数据: {mapped_angles}")
+            # logging.info(f"更新后的手指角度: {self.angle_data}")
             
             return True
         except Exception as e:
             logging.error(f"数据解析错误: {e}")
             return None
 
-    def serial_read_thread(self):
-        """串口数据读取线程"""
-        while self.thread_running:
-            if self.angle_serial and self.angle_serial.is_open:
-                try:
-                    if self.angle_serial.in_waiting:
-                        timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-                        print(f"\n[{timestamp}] ===== 角度传感器数据 =====")
-                        data = self.angle_serial.readline().decode('utf-8').strip()
-                        print(f"► 原始字节: {data}")
-                        if data:
-                            if self.parse_serial_data(data):
-                                self.data_queue.put(True)
-                except Exception as e:
-                    print(f"[错误] 角度传感器数据读取失败: {e}")
-                    continue
 
     def update_visualization(self):
-        """更新可视化"""
-        try:
-            # 检查队列中是否有新数据
-            while not self.data_queue.empty():
-                data = self.data_queue.get_nowait()
-                if isinstance(data, list) and len(data) == 5:  # 压力数据
-                    self.pressure_data = data
-                elif data is True:  # 角度数据更新标志
-                    pass  # 角度数据已经在parse_serial_data中更新
-            
-            # 使用最新的数据更新模型
-            self.create_hand_model(angles=self.angle_data, pressures=self.pressure_data)
-            
-        except queue.Empty:
-            pass
-        except Exception as e:
-            logging.error(f"更新可视化时出错: {e}")
-        finally:
-            # 继续更新
-            if self.thread_running:
-                self.root.after(16, self.update_visualization)  # 约60FPS
+        """统一的更新函数"""
+        if not self.updating:
+            try:
+                self.updating = True
+                self.visualization_running = True
+                updated = False
+                
+                # 处理所有队列中的数据
+                while not self.data_queue.empty():
+                    data = self.data_queue.get_nowait()
+                    if isinstance(data, list) and len(data) == 5:  # 压力数据
+                        self.pressure_data = data.copy()  # 使用copy避免引用问题
+                        updated = True
+                    elif data is True:  # 角度数据更新标志
+                        updated = True
+                
+                # 只在有数据更新时进行显示更新
+                if updated:
+                    # 更新显示
+                    self.update_data_display()  # 更新数据面板
+                    self.update_hand_model(     # 更新3D模型
+                        angles=self.angle_data, 
+                        pressures=self.pressure_data
+                    )
+                
+            except Exception as e:
+                logging.error(f"更新可视化时出错: {e}")
+            finally:
+                self.updating = False
+        
+        if self.visualization_running:
+            self.root.after(self.update_interval, self.update_visualization)
+
 
     def run(self):
         """运行应用程序"""
-        self.update_visualization()  # 启动更新循环
+        self.root.after(self.update_interval, self.update_visualization)
+        # self.start_visualization_thread()
         self.root.mainloop()
         
         # 程序结束时清理
         self.stop_serial_thread()  # 停止数据读取线程
         if hasattr(self, 'angle_serial') and self.angle_serial and self.angle_serial.is_open:
             self.angle_serial.close()
+        # self.visualization_thread_running = False  # 停止可视化更新线程
+        # if hasattr(self, 'visualization_thread'):
+        #     self.visualization_thread.join()  # 等待线程结束
 
 if __name__ == "__main__":
     app = DataGloveVisualizer()
